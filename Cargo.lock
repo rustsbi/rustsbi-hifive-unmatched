@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "rustsbi-sifive-unmatched"
+name = "rustsbi-hifive-unmatched"
 version = "0.1.0"
