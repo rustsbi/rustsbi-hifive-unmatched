@@ -16,14 +16,18 @@ fn on_panic(_pi: &PanicInfo) -> ! {
     loop {}
 }
 
-use riscv::register::mhartid;
-
-fn rust_main() -> ! {
+fn rust_main(hartid: usize, opaque: usize) -> ! {
     runtime::init();
-    let hartid = mhartid::read();
     if hartid == 0 { 
+        use fu740_hal::{pac, serial::Serial, prelude::*};
         use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal;
-        let p = fu740_hal::pac::Peripherals::take().unwrap();
+        let p = pac::Peripherals::take().unwrap();
+        let clocks = p.PRCI.setup()
+            .coreclk(1500.mhz()) // 1.5GHz
+            .pclk(120.mhz())
+            .freeze();
+        let mut serial = Serial::new(p.UART0, 115200.bps(), &clocks);
+        init_legacy_stdio_embedded_hal(serial);
         // todo: u-boot spl是否已经设置了串口？
     }
     todo!()
