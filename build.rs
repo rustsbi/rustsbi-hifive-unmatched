@@ -13,5 +13,6 @@ fn main() {
         .unwrap()
         .write_all(include_bytes!("src/u740.ld"))
         .unwrap();
+    println!("cargo:rustc-link-arg=-Tu740.ld");
     println!("cargo:rustc-link-search={}", out_dir.display());
 }
