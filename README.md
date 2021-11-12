@@ -34,3 +34,11 @@ HiFive Unmatched主板板载SiFive Freedom U740处理器。FU740是异构的多�
 
 - 可以试试看开机的时候按下F12？这就和x86的生态有点像了。首次启动默认不提供管理小核，需要的话重启，进SBI界面（串口？），打开。——@luojia65 2021/11/7
 - U74和S7都是64位的，所以都用RV64去编译就可以了。——@luojia65 2021/11/7
+
+## 命令行
+
+编译后得到二进制镜像
+
+```
+rust-objcopy --binary-architecture=riscv64 .\target\riscv64imac-unknown-none-elf\debug\rustsbi-hifive-unmatched -O binary target/rustsbi-hifive-unmatched.bin
+```

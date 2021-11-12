@@ -19,20 +19,35 @@ fn on_panic(_pi: &PanicInfo) -> ! {
 fn rust_main(hartid: usize, opaque: usize) -> ! {
     runtime::init();
     if hartid == 0 { 
+        init_heap();
         use fu740_hal::{pac, serial::Serial, prelude::*};
         use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal_fuse;
         let p = pac::Peripherals::take().unwrap();
         let clocks = p.PRCI.setup()
-            .coreclk(1500.mhz()) // 1.5GHz todo: 根据device tree去配置
-            .pclk(120.mhz())
+            // .coreclk(1500.mhz()) // 1.5GHz todo: 根据device tree去配置
+            // .pclk(120.mhz())
             .freeze();
         let serial = Serial::new(p.UART0, 115200.bps(), &clocks);
         let (tx, rx) = serial.split();
         init_legacy_stdio_embedded_hal_fuse(tx, rx);
         // todo: u-boot spl是否已经设置了串口？
-        rustsbi::println!("rustsbi: hello world!");
+        rustsbi::println!("rustsbi: hello world! {:x} {:x}", hartid, opaque);
     }
     todo!()
+}
+
+const SBI_HEAP_SIZE: usize = 64 * 1024; // 64KiB
+#[link_section = ".bss.uninit"]
+static mut HEAP_SPACE: [u8; SBI_HEAP_SIZE] = [0; SBI_HEAP_SIZE];
+
+use buddy_system_allocator::LockedHeap;
+#[global_allocator]
+static HEAP_ALLOCATOR: LockedHeap<32> = LockedHeap::<32>::empty();
+
+#[inline] fn init_heap() {
+    unsafe {
+        HEAP_ALLOCATOR.lock().init(HEAP_SPACE.as_ptr() as usize, SBI_HEAP_SIZE);
+    }
 }
 
 const PER_HART_STACK_SIZE: usize = 4 * 4096; // 16KiB
