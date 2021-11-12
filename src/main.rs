@@ -16,15 +16,23 @@ fn on_panic(_pi: &PanicInfo) -> ! {
     loop {}
 }
 
+use riscv::register::mhartid;
+
+fn rust_main() -> ! {
+    runtime::init();
+    let hartid = mhartid::read();
+    if hartid == 0 { 
+        use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal;
+        let p = fu740_hal::pac::Peripherals::take().unwrap();
+        // todo: u-boot spl是否已经设置了串口？
+    }
+    todo!()
+}
+
 const PER_HART_STACK_SIZE: usize = 4 * 4096; // 16KiB
 const SBI_STACK_SIZE: usize = 5 * PER_HART_STACK_SIZE; // 5 harts
 #[link_section = ".bss.uninit"]
 static mut SBI_STACK: [u8; SBI_STACK_SIZE] = [0; SBI_STACK_SIZE];
-
-fn rust_main() -> ! {
-    runtime::init();
-    todo!()
-}
 
 #[naked]
 #[link_section = ".text.entry"]
