@@ -18,15 +18,12 @@ fn on_panic(_pi: &PanicInfo) -> ! {
 
 fn rust_main(hartid: usize, opaque: usize) -> ! {
     runtime::init();
-    if hartid == 0 { 
+    if hartid == 1 { // 第0个核被屏蔽了
         init_heap();
         use fu740_hal::{pac, serial::Serial, prelude::*};
         use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal_fuse;
         let p = pac::Peripherals::take().unwrap();
-        let clocks = p.PRCI.setup()
-            // .coreclk(1500.mhz()) // 1.5GHz todo: 根据device tree去配置
-            // .pclk(120.mhz())
-            .freeze();
+        let clocks = p.PRCI.setup().freeze();
         let serial = Serial::new(p.UART0, 115200.bps(), &clocks);
         let (tx, rx) = serial.split();
         init_legacy_stdio_embedded_hal_fuse(tx, rx);
