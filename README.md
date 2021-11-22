@@ -5,6 +5,26 @@ RustSBI是一个引导程序环境；主板上电时，RustSBI将会先行启动
 在启动后，RustSBI仍然常驻后台，提供操作系统需要的功能。
 RustSBI的设计完全符合RISC-V SBI规范标准，只要支持此标准的操作系统，都可以使用RustSBI引导启动。
 
+## 编译和运行
+
+这个项目使用xtask框架，可以使用以下指令来编译：
+
+```shell
+cargo make
+```
+
+（如果增加--release参数，说明编译的是不带调试符号的release版本）
+
+这时候编译产生一个elf文件和一个bin文件，bin文件可以直接用于烧录。
+
+使用以下操作来烧录bin文件到sd卡分区（危险！必须先备份数据）
+
+```shell
+sudo dd if=target/riscv64imac-unknown-none-elf/debug/rustsbi-hifive-unmatched.bin of=\\?\Device\Harddisk????\Partition2 --progress
+```
+
+烧录完成后，就可以使用RustSBI引导启动了。
+
 ## 对大小核设计的支持方案
 
 HiFive Unmatched主板板载SiFive Freedom U740处理器。FU740是异构的多核处理器，它总共有五个核。
