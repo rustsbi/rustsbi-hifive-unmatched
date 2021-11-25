@@ -40,6 +40,9 @@ HiFive Unmatched主板板载SiFive Freedom U740处理器。FU740是异构的多�
 
 ## 开发日程
 
+目前的情况是需要为镜像引入fdt头，因为它要能被u-boot spl阶段识别，才能成功被加载到内存中从而启动。
+需要调研fdt头的格式，以及如何在xtask中把它拼接出来。
+
 - 11月7日：了解FU740处理器，阅读文档，编写方案
 - 11月8-14日：实现RustSBI与SBI标准的大部分功能
 - 11月15-21日：在Unmatched上调试rCore和Linux
