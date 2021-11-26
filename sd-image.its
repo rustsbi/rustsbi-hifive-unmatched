@@ -1,0 +1,27 @@
+/dts-v1/;
+
+/ {
+    description = "RustSBI Test Image";
+    #address-cells = <1>;
+
+    images {
+        kernel@unmatched {
+            description = "RustSBI binary file";
+            data = /incbin/("target/riscv64imac-unknown-none-elf/debug/rustsbi-hifive-unmatched.bin");
+            type = "kernel";
+            arch = "riscv";
+            os = "none";
+            compression = "none";
+            load = <0x80000000>;
+            entry = <0x80000000>;
+        };
+    };
+
+    configurations {
+        default = "conf@unmatched";
+        conf@unmatched {
+            description = "Enter RustSBI";
+            kernel = "kernel@unmatched";
+        };
+    };
+};
