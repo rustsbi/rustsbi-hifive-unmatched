@@ -23,8 +23,8 @@
 		unmatched-sdcard {
 			description = "hifive-unmatched-a00";
 			firmware = "rustsbi";
-			# loadables = "uboot";
-			# fdt = "fdt-1";
+			//loadables = "uboot";
+			//fdt = "fdt-1";
 		};
     };
 };
