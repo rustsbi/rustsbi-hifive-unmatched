@@ -5,23 +5,26 @@
     #address-cells = <1>;
 
     images {
-        kernel@unmatched {
-            description = "RustSBI binary file";
+        rustsbi {
             data = /incbin/("target/riscv64imac-unknown-none-elf/debug/rustsbi-hifive-unmatched.bin");
-            type = "kernel";
-            arch = "riscv";
-            os = "none";
-            compression = "none";
-            load = <0x80000000>;
-            entry = <0x80000000>;
+			description = "RustSBI Firmware";
+			type = "firmware";
+			os = "opensbi";
+			arch = "riscv";
+			compression = "none";
+			load = <0x80000000>;
+			entry = <0x80000000>;
         };
     };
 
     configurations {
-        default = "conf@unmatched";
-        conf@unmatched {
-            description = "Enter RustSBI";
-            kernel = "kernel@unmatched";
-        };
+		default = "unmatched-sdcard";
+
+		unmatched-sdcard {
+			description = "hifive-unmatched-a00";
+			firmware = "rustsbi";
+			# loadables = "uboot";
+			# fdt = "fdt-1";
+		};
     };
 };
