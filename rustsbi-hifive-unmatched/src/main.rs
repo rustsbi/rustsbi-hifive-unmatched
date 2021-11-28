@@ -9,6 +9,8 @@
 
 mod runtime;
 
+use rustsbi::println;
+
 use core::panic::PanicInfo;
 
 #[panic_handler]
@@ -23,13 +25,24 @@ fn rust_main(hartid: usize, opaque: usize) -> ! {
         use fu740_hal::{pac, serial::Serial, prelude::*};
         use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal_fuse;
         let p = pac::Peripherals::take().unwrap();
-        let clocks = p.PRCI.setup().freeze();
-        let serial = Serial::new(p.UART0, 115200.bps(), &clocks);
-        let (tx, rx) = serial.split();
-        init_legacy_stdio_embedded_hal_fuse(tx, rx);
+
+        let uart = p.UART0;
+        
+        unsafe {
+            uart.txdata.write_with_zero(|w| w.data().bits(b'R'));
+            uart.txdata.write_with_zero(|w| w.data().bits(b'U'));
+            uart.txdata.write_with_zero(|w| w.data().bits(b'S'));
+            uart.txdata.write_with_zero(|w| w.data().bits(b'T'));
+            uart.txdata.write_with_zero(|w| w.data().bits(b'\n'));
+        }
+
+        // let clocks = p.PRCI.setup().freeze();
+        // let serial = Serial::new(p.UART0, 115200.bps(), &clocks);
+        // let (tx, rx) = serial.split();
+        // init_legacy_stdio_embedded_hal_fuse(tx, rx);
         // todo: u-boot spl是否已经设置了串口？
-        rustsbi::println!("rustsbi: hello world!");
-        rustsbi::println!("rustsbi: hello world! {:x} {:x}", hartid, opaque);
+        // println!("rustsbi: hello world!");
+        // println!("rustsbi: hello world! {:x} {:x}", hartid, opaque);
     // }
     todo!()
 }
