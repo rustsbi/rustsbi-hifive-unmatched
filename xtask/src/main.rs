@@ -24,6 +24,10 @@ fn main() {
             (about: "Build project")
             (@arg release: --release "Build artifacts in release mode, with optimizations")
         )
+        (@subcommand asm =>
+            (about: "View asm code for project")
+            (@arg release: --release "Build artifacts in release mode, with optimizations")
+        )
         (@subcommand image =>
             (about: "Build SD card partition image")
             (@arg release: --release "Build artifacts in release mode, with optimizations")
@@ -42,6 +46,12 @@ fn main() {
         }
         xtask_build_sbi(&xtask_env);
         xtask_binary_sbi(&xtask_env);
+    } else if let Some(matches) = matches.subcommand_matches("asm") {
+        if matches.is_present("release") {
+            xtask_env.compile_mode = CompileMode::Release;
+        }
+        xtask_build_sbi(&xtask_env);
+        xtask_asm_sbi(&xtask_env);
     } else if let Some(matches) = matches.subcommand_matches("image") {
         if matches.is_present("release") {
             xtask_env.compile_mode = CompileMode::Release;
@@ -91,6 +101,16 @@ fn xtask_binary_sbi(xtask_env: &XtaskEnv) {
         println!("objcopy binary failed");
         process::exit(1);
     }
+}
+
+fn xtask_asm_sbi(xtask_env: &XtaskEnv) {
+    // @{{objdump}} -D {{test-kernel-elf}} | less
+    Command::new("riscv-none-embed-objdump")
+        .current_dir(dist_dir(xtask_env))
+        .arg("-d")
+        .arg("rustsbi-hifive-unmatched")
+        .status()
+        .unwrap();
 }
 
 fn xtask_unmatched_gdb(xtask_env: &XtaskEnv) {

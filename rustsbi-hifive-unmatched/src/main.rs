@@ -9,6 +9,7 @@
 
 mod runtime;
 mod peripheral;
+mod early_trap;
 
 use core::panic::PanicInfo;
 
@@ -27,10 +28,10 @@ fn rust_main(hartid: usize, opaque: usize) -> ! {
     if hartid == 0 {
         init_bss();
     }
-    runtime::init();
     if hartid == 0 {
         let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
         init_stdout(uart);
+        early_trap::init(hartid);
         println!("rustsbi: hello world (1)!");
         print_misa();
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
@@ -38,7 +39,8 @@ fn rust_main(hartid: usize, opaque: usize) -> ! {
         println!("rustsbi: hello world!");
         println!("rustsbi: hello world! {:x} {:x}", hartid, opaque);
     }
-    todo!()
+    runtime::init();
+    loop {}
 }
 
 fn init_bss() {
