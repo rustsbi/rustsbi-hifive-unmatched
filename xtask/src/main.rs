@@ -24,6 +24,9 @@ fn main() {
             (about: "Build project")
             (@arg release: --release "Build artifacts in release mode, with optimizations")
         )
+        (@subcommand gdb =>
+            (about: "Run GDB debugger")
+        )
     ).get_matches();
     let mut xtask_env = XtaskEnv {
         compile_mode: CompileMode::Debug,
@@ -35,6 +38,10 @@ fn main() {
         }
         xtask_build_sbi(&xtask_env);
         xtask_binary_sbi(&xtask_env);
+    } else if let Some(_matches) = matches.subcommand_matches("gdb") {
+        xtask_build_sbi(&xtask_env);
+        xtask_binary_sbi(&xtask_env);
+        xtask_unmatched_gdb(&xtask_env);
     } else {
         println!("Use `cargo make` to build, `cargo xtask --help` for help")
     }
@@ -72,6 +79,25 @@ fn xtask_binary_sbi(xtask_env: &XtaskEnv) {
     if !status.success() {
         println!("objcopy binary failed");
         process::exit(1);
+    }
+}
+
+fn xtask_unmatched_gdb(xtask_env: &XtaskEnv) {
+    let mut command = Command::new("riscv-none-embed-gdb");
+    command.current_dir(dist_dir(xtask_env));
+    command.args(&["--eval-command", "file rustsbi-hifive-unmatched"]);
+    command.args(&["--eval-command", "target extended-remote localhost:3333"]);
+    command.arg("--quiet");
+        
+    ctrlc::set_handler(move || {
+        // when ctrl-c, don't exit gdb
+    }).expect("disable Ctrl-C exit");
+
+    let status = command.status().expect("run program");
+
+    if !status.success() {
+        println!("gdb failed with status {}", status);
+        process::exit(status.code().unwrap_or(1));
     }
 }
 

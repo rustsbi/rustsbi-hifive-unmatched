@@ -1,3 +1,4 @@
 [alias]
 xtask = "run --package xtask --"
 make = "xtask make"
+gdb = "xtask gdb"
