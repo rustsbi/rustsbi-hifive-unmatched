@@ -32,6 +32,7 @@ fn rust_main(hartid: usize, opaque: usize) -> ! {
         let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
         init_stdout(uart);
         println!("rustsbi: hello world (1)!");
+        print_misa();
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
         init_stdio();
         println!("rustsbi: hello world!");
@@ -58,6 +59,26 @@ fn init_stdio() {
     use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal;
     let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
     init_legacy_stdio_embedded_hal(uart);
+}
+
+#[inline]
+fn print_misa() {
+    use riscv::register::misa::{self, MXL};
+    let isa = misa::read();
+    if let Some(isa) = isa {
+        let mxl_str = match isa.mxl() {
+            MXL::XLEN32 => "RV32",
+            MXL::XLEN64 => "RV64",
+            MXL::XLEN128 => "RV128",
+        };
+        print!("[rustsbi] misa: {}", mxl_str);
+        for ext in 'A'..='Z' {
+            if isa.has_extension(ext) {
+                print!("{}", ext);
+            }
+        }
+        println!("");
+    }
 }
 
 const SBI_HEAP_SIZE: usize = 64 * 1024; // 64KiB
