@@ -2,49 +2,45 @@ OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
 /* RustSBI will be executed at DDR and remains resident on this location */
-BASE_ADDRESS = 0x80000000;
+PROVIDE(stext = 0x80000000);
 
 SECTIONS
 {
-    . = BASE_ADDRESS;
-    skernel = .;
-
-    stext = .;
-    .text : {
+    .text stext : {
+        stext = .;
         *(.text.entry)
         *(.text .text.*)
+        . = ALIGN(4);
+        etext = .;
     }
 
-    . = ALIGN(4K);
-    etext = .;
-    srodata = .;
-    .rodata : {
+    .rodata : ALIGN(4) {
+        srodata = .;
         *(.rodata .rodata.*)
         *(.srodata .srodata.*)
+        . = ALIGN(4);
+        erodata = .;
     }
 
-    . = ALIGN(4K);
-    erodata = .;
-    sdata = .;
-    .data : {
+    .data : ALIGN(4) {
+        sidata = LOADADDR(.data);
+        sdata = .;
         *(.data .data.*)
         *(.sdata .sdata.*)
+        . = ALIGN(4);
+        edata = .;
     }
 
-    . = ALIGN(4K);
-    edata = .;
-    .bss : {
+    .bss (NOLOAD) : ALIGN(4) {
         *(.bss.uninit)
         sbss = .;
         *(.bss .bss.*)
         *(.sbss .sbss.*)
+        . = ALIGN(4);
+        ebss = .;
     }
 
-    . = ALIGN(4K);
-    ebss = .;
-    ekernel = .;
-
     /DISCARD/ : {
-        *(.eh_frame)
+        *(.eh_frame .eh_frame_hdr)
     }
 }

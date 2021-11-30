@@ -15,14 +15,18 @@ use core::panic::PanicInfo;
 #[panic_handler]
 fn on_panic(panic_info: &PanicInfo) -> ! {
     if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
-        println!("panic occurred: {:?}", s);
+        println!("panic occurred: {}", s);
     } else {
         println!("panic occurred");
     }
+    println!("panic occurred: {}", panic_info);
     loop {}
 }
 
 fn rust_main(hartid: usize, opaque: usize) -> ! {
+    if hartid == 0 {
+        init_bss();
+    }
     runtime::init();
     if hartid == 0 {
         let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
@@ -34,6 +38,20 @@ fn rust_main(hartid: usize, opaque: usize) -> ! {
         println!("rustsbi: hello world! {:x} {:x}", hartid, opaque);
     }
     todo!()
+}
+
+fn init_bss() {
+    extern "C" {
+        static mut ebss: u32;
+        static mut sbss: u32;
+        static mut edata: u32;
+        static mut sdata: u32;
+        static sidata: u32;
+    }
+    unsafe {
+        r0::zero_bss(&mut sbss, &mut ebss);
+        r0::init_data(&mut sdata, &mut edata, &sidata);
+    } 
 }
 
 fn init_stdio() {
