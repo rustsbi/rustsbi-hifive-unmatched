@@ -21,10 +21,10 @@ fn on_panic(panic_info: &PanicInfo) -> ! {
 }
 
 fn rust_main(hartid: usize, opaque: usize) -> ! {
-    if hartid == 0 {
+    if hartid == 1 { // 不应该用第0个核启动，它不支持LR/SC指令（SiFive S7核文档，第3.6节），不能使用部分的异步锁。感谢@dram
         init_bss();
     }
-    if hartid == 0 {
+    if hartid == 1 {
         let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
         init_stdout(uart);
         early_trap::init(hartid);
