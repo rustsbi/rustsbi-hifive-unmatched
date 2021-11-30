@@ -8,43 +8,38 @@
 #![no_main]
 
 mod runtime;
-
-use rustsbi::println;
+mod peripheral;
 
 use core::panic::PanicInfo;
 
 #[panic_handler]
-fn on_panic(_pi: &PanicInfo) -> ! {
+fn on_panic(panic_info: &PanicInfo) -> ! {
+    if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+        println!("panic occurred: {:?}", s);
+    } else {
+        println!("panic occurred");
+    }
     loop {}
 }
 
 fn rust_main(hartid: usize, opaque: usize) -> ! {
     runtime::init();
-    // if hartid == 1 { // 第0个核被屏蔽了
-        // init_heap();
-        use fu740_hal::{pac, serial::Serial, prelude::*};
-        use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal_fuse;
-        let p = pac::Peripherals::take().unwrap();
-
-        let uart = p.UART0;
-        
-        unsafe {
-            uart.txdata.write_with_zero(|w| w.data().bits(b'R'));
-            uart.txdata.write_with_zero(|w| w.data().bits(b'U'));
-            uart.txdata.write_with_zero(|w| w.data().bits(b'S'));
-            uart.txdata.write_with_zero(|w| w.data().bits(b'T'));
-            uart.txdata.write_with_zero(|w| w.data().bits(b'\n'));
-        }
-
-        // let clocks = p.PRCI.setup().freeze();
-        // let serial = Serial::new(p.UART0, 115200.bps(), &clocks);
-        // let (tx, rx) = serial.split();
-        // init_legacy_stdio_embedded_hal_fuse(tx, rx);
-        // todo: u-boot spl是否已经设置了串口？
-        // println!("rustsbi: hello world!");
-        // println!("rustsbi: hello world! {:x} {:x}", hartid, opaque);
-    // }
+    if hartid == 0 {
+        let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
+        init_stdout(uart);
+        println!("rustsbi: hello world (1)!");
+        init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
+        init_stdio();
+        println!("rustsbi: hello world!");
+        println!("rustsbi: hello world! {:x} {:x}", hartid, opaque);
+    }
     todo!()
+}
+
+fn init_stdio() {
+    use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal;
+    let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
+    init_legacy_stdio_embedded_hal(uart);
 }
 
 const SBI_HEAP_SIZE: usize = 64 * 1024; // 64KiB
@@ -52,6 +47,8 @@ const SBI_HEAP_SIZE: usize = 64 * 1024; // 64KiB
 static mut HEAP_SPACE: [u8; SBI_HEAP_SIZE] = [0; SBI_HEAP_SIZE];
 
 use buddy_system_allocator::LockedHeap;
+
+use crate::peripheral::uart::init_stdout;
 #[global_allocator]
 static HEAP_ALLOCATOR: LockedHeap<32> = LockedHeap::<32>::empty();
 

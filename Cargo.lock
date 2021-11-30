@@ -123,6 +123,7 @@ dependencies = [
 [[package]]
 name = "fu740-hal"
 version = "0.1.0"
+source = "git+https://github.com/riscv-rust/fu740-hal#7a243e2f3e975e8bd936c7ef294113b7acad6d9e"
 dependencies = [
  "embedded-hal",
  "fu740-pac",
@@ -282,7 +283,9 @@ name = "rustsbi-hifive-unmatched"
 version = "0.1.0"
 dependencies = [
  "buddy_system_allocator",
+ "embedded-hal",
  "fu740-hal",
+ "nb 1.0.0",
  "riscv 0.7.0",
  "rustsbi",
 ]

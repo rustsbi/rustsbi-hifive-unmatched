@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 riscv = "0.7"
-fu740-hal = { path = "../../fu740-hal" }
+fu740-hal = { git = "https://github.com/riscv-rust/fu740-hal" }
 rustsbi = "0.2.0-alpha.7"
 buddy_system_allocator = "0.8"
+embedded-hal = "0.2.6"
+nb = "1"
