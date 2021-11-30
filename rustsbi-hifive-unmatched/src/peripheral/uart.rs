@@ -91,25 +91,15 @@ pub fn _print(args: fmt::Arguments) {
     unsafe { STDOUT.unwrap() }.write_fmt(args).unwrap();
 }
 
-/// Prints to the legacy debug console.
-///
-/// This is only supported when there exists legacy extension; 
-/// otherwise platform caller should use an early kernel input/output device
-/// declared in platform specific hardware.
 #[macro_export(local_inner_macros)]
-macro_rules! print {
+macro_rules! eprint {
     ($($arg:tt)*) => ({
         $crate::peripheral::uart::_print(core::format_args!($($arg)*));
     });
 }
 
-/// Prints to the legacy debug console, with a newline.
-///
-/// This is only supported when there exists legacy extension; 
-/// otherwise platform caller should use an early kernel input/output device
-/// declared in platform specific hardware.
 #[macro_export(local_inner_macros)]
-macro_rules! println {
+macro_rules! eprintln {
     ($fmt: literal $(, $($arg: tt)+)?) => {
         $crate::peripheral::uart::_print(core::format_args!(core::concat!($fmt, "\r\n") $(, $($arg)+)?));
     }

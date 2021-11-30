@@ -19,7 +19,7 @@ pub fn init(hartid: usize) {
 }
 
 extern "C" fn rust_fail(ctx: &SupervisorContext) -> ! {
-    crate::println!("rustsbi: early init stage fail, context: {:x?}, mcause: {:?}, mtval: {:x}", ctx, mcause::read(), mtval::read());
+    crate::eprintln!("rustsbi: early init stage fail, context: {:x?}, mcause: {:?}, mtval: {:x}", ctx, mcause::read(), mtval::read());
     loop {}
 }
 
@@ -102,6 +102,8 @@ pub unsafe extern "C" fn early_trap_fail() -> ! {
         sd      t0, 31*8(sp)",
         "csrr   t1, mepc
         sd      t1, 32*8(sp)",
+        "csrr   t2, mscratch
+        sd      t2, 1*8(sp)",
         "mv     a0, sp",
         "j      {fail}",
         fail = sym rust_fail,

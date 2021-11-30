@@ -12,15 +12,11 @@ mod peripheral;
 mod early_trap;
 
 use core::panic::PanicInfo;
+use rustsbi::println;
 
 #[panic_handler]
 fn on_panic(panic_info: &PanicInfo) -> ! {
-    if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
-        println!("panic occurred: {}", s);
-    } else {
-        println!("panic occurred");
-    }
-    println!("panic occurred: {}", panic_info);
+    eprintln!("panic occurred: {}", panic_info);
     loop {}
 }
 
@@ -32,7 +28,7 @@ fn rust_main(hartid: usize, opaque: usize) -> ! {
         let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
         init_stdout(uart);
         early_trap::init(hartid);
-        println!("rustsbi: hello world (1)!");
+        eprintln!("rustsbi: hello world! hart id: {:x}, opaque: {:x}", hartid, opaque);
         print_misa();
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
         init_stdio();
@@ -73,13 +69,13 @@ fn print_misa() {
             MXL::XLEN64 => "RV64",
             MXL::XLEN128 => "RV128",
         };
-        print!("[rustsbi] misa: {}", mxl_str);
+        eprint!("[rustsbi] misa: {}", mxl_str);
         for ext in 'A'..='Z' {
             if isa.has_extension(ext) {
-                print!("{}", ext);
+                eprint!("{}", ext);
             }
         }
-        println!("");
+        eprintln!("");
     }
 }
 
@@ -118,10 +114,10 @@ unsafe extern "C" fn entry() -> ! {
     li x6, 0
     li x7, 0
     li x8, 0
-    li x9, 0
-    li x10, 0
-    li x11, 0
-    li x12, 0
+    li x9, 0",
+    // no x10 and x11: x10 is a0 and x11 is a1, they are passed to 
+    // main function as arguments
+    "li x12, 0
     li x13, 0
     li x14, 0
     li x15, 0
