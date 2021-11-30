@@ -24,6 +24,10 @@ fn main() {
             (about: "Build project")
             (@arg release: --release "Build artifacts in release mode, with optimizations")
         )
+        (@subcommand image =>
+            (about: "Build SD card partition image")
+            (@arg release: --release "Build artifacts in release mode, with optimizations")
+        )
         (@subcommand gdb =>
             (about: "Run GDB debugger")
         )
@@ -38,6 +42,13 @@ fn main() {
         }
         xtask_build_sbi(&xtask_env);
         xtask_binary_sbi(&xtask_env);
+    } else if let Some(matches) = matches.subcommand_matches("image") {
+        if matches.is_present("release") {
+            xtask_env.compile_mode = CompileMode::Release;
+        }
+        xtask_build_sbi(&xtask_env);
+        xtask_binary_sbi(&xtask_env);
+        xtask_sd_image(&xtask_env);
     } else if let Some(_matches) = matches.subcommand_matches("gdb") {
         xtask_build_sbi(&xtask_env);
         xtask_binary_sbi(&xtask_env);
@@ -97,6 +108,23 @@ fn xtask_unmatched_gdb(xtask_env: &XtaskEnv) {
 
     if !status.success() {
         println!("gdb failed with status {}", status);
+        process::exit(status.code().unwrap_or(1));
+    }
+}
+
+fn xtask_sd_image(_xtask_env: &XtaskEnv) {
+    // todo: mkimage tool path
+    let status = Command::new("wsl")
+        .current_dir(project_root())
+        .arg("mkimage")
+        .arg("-f")
+        .arg("sd-image.its")
+        .arg("target/sd-card-partition-2.img")
+        .status()
+        .expect("create sd card image");
+
+    if !status.success() {
+        println!("mkimage failed with status {}", status);
         process::exit(status.code().unwrap_or(1));
     }
 }

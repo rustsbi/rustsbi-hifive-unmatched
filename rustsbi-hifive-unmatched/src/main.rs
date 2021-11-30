@@ -21,7 +21,7 @@ fn on_panic(_pi: &PanicInfo) -> ! {
 fn rust_main(hartid: usize, opaque: usize) -> ! {
     runtime::init();
     // if hartid == 1 { // 第0个核被屏蔽了
-        init_heap();
+        // init_heap();
         use fu740_hal::{pac, serial::Serial, prelude::*};
         use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal_fuse;
         let p = pac::Peripherals::take().unwrap();
