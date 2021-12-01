@@ -107,7 +107,8 @@ fn xtask_asm_sbi(xtask_env: &XtaskEnv) {
     // @{{objdump}} -D {{test-kernel-elf}} | less
     Command::new("riscv-none-embed-objdump")
         .current_dir(dist_dir(xtask_env))
-        .arg("-d")
+        .arg("--disassemble")
+        .arg("--demangle")
         .arg("rustsbi-hifive-unmatched")
         .status()
         .unwrap();
