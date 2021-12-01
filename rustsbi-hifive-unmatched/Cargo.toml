@@ -14,3 +14,4 @@ embedded-hal = "0.2.6"
 nb = "1"
 r0 = "1"
 spin = { version = "0.9", features = ["ticket_mutex"] }
+bit_field = "0.10"

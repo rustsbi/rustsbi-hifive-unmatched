@@ -262,6 +262,7 @@ dependencies = [
 name = "rustsbi-hifive-unmatched"
 version = "0.1.0"
 dependencies = [
+ "bit_field",
  "buddy_system_allocator",
  "embedded-hal",
  "fu740-hal",

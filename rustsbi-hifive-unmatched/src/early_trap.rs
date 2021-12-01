@@ -7,9 +7,9 @@ use riscv::register::{
 };
 
 #[inline]
-pub fn init(hartid: usize) {
+pub fn init(hart_id: usize) {
     let stack_base = unsafe { &super::SBI_STACK } as *const _ as usize;
-    let stack = stack_base + (hartid + 1) * super::PER_HART_STACK_SIZE;
+    let stack = stack_base + (hart_id + 1) * super::PER_HART_STACK_SIZE;
     mscratch::write(stack);
     let mut addr = early_trap_fail as usize;
     if addr & 0x2 != 0 {
