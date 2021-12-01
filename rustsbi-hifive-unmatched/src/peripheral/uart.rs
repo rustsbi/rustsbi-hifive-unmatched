@@ -14,7 +14,7 @@ unsafe impl Sync for Uart {}
 
 impl Uart {
     #[inline]
-    pub unsafe fn prev_bootloading_step() -> Self {
+    pub unsafe fn preloaded_uart0() -> Self {
         let inner = pac::UART0::ptr();
         Self { inner }
     }

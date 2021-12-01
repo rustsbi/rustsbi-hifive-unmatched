@@ -1,16 +1,16 @@
 #![no_std]
 #![no_main]
-#![feature(naked_functions)]
-#![feature(asm, asm_const, asm_sym)]
+#![feature(naked_functions, asm, asm_const, asm_sym)]
 #![feature(generator_trait)]
 #![feature(default_alloc_error_handler)]
-#![no_std]
-#![no_main]
+#![feature(ptr_metadata)]
 
 mod runtime;
 mod peripheral;
 mod early_trap;
 mod execute;
+#[allow(unused)] // use this in the future
+mod device_tree;
 
 use core::panic::PanicInfo;
 use rustsbi::println;
@@ -18,14 +18,14 @@ use rustsbi::println;
 #[panic_handler]
 fn on_panic(info: &PanicInfo) -> ! {
     let hart_id = riscv::register::mhartid::read();
-    println!("[rustsbi-panic] hart {} {}", hart_id, info); // [rustsbi-panic] hart 0 panicked at xxx
+    eprintln!("[rustsbi-panic] hart {} {}", hart_id, info); // [rustsbi-panic] hart 0 panicked at xxx
     loop {}
 }
 
 fn rust_main(hartid: usize, opaque: usize) -> ! {
     if hartid == 0 {
         init_bss();
-        let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
+        let uart = unsafe { peripheral::Uart::preloaded_uart0() };
         init_stdout(uart);
         early_trap::init(hartid);
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
@@ -40,27 +40,9 @@ fn rust_main(hartid: usize, opaque: usize) -> ! {
         );
         print_misa();
         println!("rustsbi: hello world! {:x} {:x}", hartid, opaque);
-        unsafe { print_device_tree(opaque) };
     }
     runtime::init();
     loop {}
-}
-
-unsafe fn print_device_tree(dtb_pa: usize) {
-    // use device_tree::DeviceTree;
-    const DEVICE_TREE_MAGIC: u32 = 0xD00DFEED;
-    #[repr(C)]
-    struct DtbHeader {
-        magic: u32,
-        size: u32,
-    }
-    let header = &*(dtb_pa as *const DtbHeader);
-    let magic = u32::from_be(header.magic);
-    if magic == DEVICE_TREE_MAGIC {
-        let size = u32::from_be(header.size);
-        let data = core::slice::from_raw_parts(dtb_pa as *const u8, size as usize);
-        eprintln!("{:x?}", data);
-    }
 }
 
 fn init_bss() {
@@ -79,7 +61,7 @@ fn init_bss() {
 
 fn init_stdio() {
     use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal;
-    let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
+    let uart = unsafe { peripheral::Uart::preloaded_uart0() };
     init_legacy_stdio_embedded_hal(uart);
 }
 
