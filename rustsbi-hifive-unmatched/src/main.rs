@@ -10,7 +10,7 @@ mod peripheral;
 mod early_trap;
 mod execute;
 #[allow(unused)] // use this in the future
-mod device_tree;
+// mod device_tree;
 
 use core::panic::PanicInfo;
 use rustsbi::println;
@@ -29,7 +29,9 @@ fn rust_main(hartid: usize, opaque: usize) -> ! {
         init_stdout(uart);
         early_trap::init(hartid);
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
-        init_stdio();
+        init_stdio(uart);
+        let clint = peripheral::Clint::new(0x2000000 as *mut u8);
+        init_clint(clint);
     }
     if hartid == 0 {
         println!("[rustsbi] RustSBI version {}", rustsbi::VERSION);
@@ -59,10 +61,14 @@ fn init_bss() {
     } 
 }
 
-fn init_stdio() {
+fn init_stdio(uart: peripheral::Uart) {
     use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal;
-    let uart = unsafe { peripheral::Uart::preloaded_uart0() };
     init_legacy_stdio_embedded_hal(uart);
+}
+
+fn init_clint(clint: peripheral::Clint) {
+    rustsbi::init_ipi(clint);
+    rustsbi::init_timer(clint);
 }
 
 #[inline]
