@@ -10,33 +10,57 @@
 mod runtime;
 mod peripheral;
 mod early_trap;
+mod execute;
 
 use core::panic::PanicInfo;
 use rustsbi::println;
 
 #[panic_handler]
-fn on_panic(panic_info: &PanicInfo) -> ! {
-    eprintln!("panic occurred: {}", panic_info);
+fn on_panic(info: &PanicInfo) -> ! {
+    let hart_id = riscv::register::mhartid::read();
+    println!("[rustsbi-panic] hart {} {}", hart_id, info); // [rustsbi-panic] hart 0 panicked at xxx
     loop {}
 }
 
 fn rust_main(hartid: usize, opaque: usize) -> ! {
     if hartid == 0 {
         init_bss();
-    }
-    if hartid == 0 {
         let uart = unsafe { peripheral::Uart::prev_bootloading_step() };
         init_stdout(uart);
         early_trap::init(hartid);
-        eprintln!("rustsbi: hello world! hart id: {:x}, opaque: {:x}", hartid, opaque);
-        print_misa();
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
         init_stdio();
-        println!("rustsbi: hello world!");
+    }
+    if hartid == 0 {
+        println!("[rustsbi] RustSBI version {}", rustsbi::VERSION);
+        println!("{}", rustsbi::LOGO);
+        println!(
+            "[rustsbi] Implementation: RustSBI-HiFive-Unleashed Version {}",
+            env!("CARGO_PKG_VERSION")
+        );
+        print_misa();
         println!("rustsbi: hello world! {:x} {:x}", hartid, opaque);
+        unsafe { print_device_tree(opaque) };
     }
     runtime::init();
     loop {}
+}
+
+unsafe fn print_device_tree(dtb_pa: usize) {
+    // use device_tree::DeviceTree;
+    const DEVICE_TREE_MAGIC: u32 = 0xD00DFEED;
+    #[repr(C)]
+    struct DtbHeader {
+        magic: u32,
+        size: u32,
+    }
+    let header = &*(dtb_pa as *const DtbHeader);
+    let magic = u32::from_be(header.magic);
+    if magic == DEVICE_TREE_MAGIC {
+        let size = u32::from_be(header.size);
+        let data = core::slice::from_raw_parts(dtb_pa as *const u8, size as usize);
+        eprintln!("{:x?}", data);
+    }
 }
 
 fn init_bss() {
