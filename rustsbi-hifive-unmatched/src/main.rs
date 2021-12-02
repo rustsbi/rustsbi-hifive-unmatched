@@ -25,7 +25,7 @@ fn on_panic(info: &PanicInfo) -> ! {
     loop {}
 }
 
-fn rust_main(hart_id: usize, opaque: usize) -> ! {
+fn rust_main(hart_id: usize, opaque: usize) {
     let clint = peripheral::Clint::new(0x2000000 as *mut u8);
     if hart_id == 0 {
         init_bss();
@@ -196,7 +196,9 @@ unsafe extern "C" fn entry() -> ! {
     bnez    t2, 1b
     ",
     // 3. jump to main function (absolute address)
-    "j      {rust_main}",
+    "call   {rust_main}",
+    // 4. after main function return, invoke CEASE instruction
+    ".word 0x30500073", // cease
     per_hart_stack_size = const PER_HART_STACK_SIZE,
     stack = sym SBI_STACK,
     rust_main = sym rust_main,

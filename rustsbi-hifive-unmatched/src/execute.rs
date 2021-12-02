@@ -7,7 +7,7 @@ use riscv::register::{
     mie, mip,
 };
 
-pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize) -> ! {
+pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize) {
     let mut rt = Runtime::new_sbi_supervisor(supervisor_mepc, hart_id, opaque);
     loop {
         match Pin::new(&mut rt).resume(()) {
@@ -27,7 +27,7 @@ pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize)
                 mie::clear_mtimer();
             },
             GeneratorState::Yielded(MachineTrap::MachineSoft()) => todo!(),
-            GeneratorState::Complete(()) => unreachable!()
+            GeneratorState::Complete(()) => break
         }
     }
 }
