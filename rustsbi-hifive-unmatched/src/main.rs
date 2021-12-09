@@ -12,16 +12,18 @@ mod peripheral;
 mod early_trap;
 mod execute;
 mod hart_csr_utils;
+mod console;
+mod util;
 // #[allow(unused)] // use this in the future
 // mod device_tree;
 
 use core::panic::PanicInfo;
-use rustsbi::println;
+use console::println;
 
 #[panic_handler]
 fn on_panic(info: &PanicInfo) -> ! {
     let hart_id = riscv::register::mhartid::read();
-    eprintln!("[rustsbi-panic] hart {} {}", hart_id, info); // [rustsbi-panic] hart 0 panicked at xxx
+    println!("[rustsbi-panic] hart {} {}", hart_id, info); // [rustsbi-panic] hart 0 panicked at xxx
     loop {}
 }
 
@@ -41,7 +43,7 @@ fn rust_main(hart_id: usize, opaque: usize) {
             "[rustsbi] Implementation: RustSBI-HiFive-Unleashed Version {}",
             env!("CARGO_PKG_VERSION")
         );
-        hart_csr_utils::print_hart_csrs();
+        hart_csr_utils::print_hart0_csrs();
         println!("[rustsbi] enter supervisor 0x80200000, opaque register {:#x}", opaque);
         for target_hart_id in 0..=4 {
             if target_hart_id != 0 {
@@ -49,11 +51,19 @@ fn rust_main(hart_id: usize, opaque: usize) {
             }
         }
     } else { // 不是初始化核，先暂停
-        delegate_interrupt_exception(); // 第0个核不能委托中断（@sequencer）
+        delegate_interrupt_exception(); // 第0个核不能委托中断（@dram）
         pause(clint);
+        if hart_id == 1 {
+            hart_csr_utils::print_hartn_csrs();
+        }
     }
     runtime::init();
-    execute::execute_supervisor(0x80200000, hart_id, opaque);
+    if hart_id == 1 { // todo
+        execute::execute_supervisor(0x80200000, hart_id, opaque);
+    } else {
+        println!("hart {}!", hart_id);
+        loop {}
+    }
 }
 
 fn init_bss() {

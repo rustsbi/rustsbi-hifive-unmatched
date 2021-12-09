@@ -5,9 +5,15 @@ use riscv::register::{
     medeleg, mideleg,
     misa::{self, MXL},
 };
-use rustsbi::{print, println};
+use crate::console::{print, println};
 
-pub fn print_hart_csrs() {
+pub fn print_hart0_csrs() {
+    print_misa();
+    // 第0个核没有S态，不能委托中断
+    print_pmp();
+}
+
+pub fn print_hartn_csrs() {
     print_misa();
     print_mideleg();
     print_medeleg();

@@ -19,7 +19,7 @@ pub fn init(hart_id: usize) {
 }
 
 extern "C" fn rust_fail(ctx: &SupervisorContext) -> ! {
-    crate::eprintln!("rustsbi: early init stage fail, context: {:x?}, mcause: {:?}, mtval: {:x}", ctx, mcause::read(), mtval::read());
+    crate::println!("rustsbi: early init stage fail, context: {:x?}, mcause: {:?}, mtval: {:x}", ctx, mcause::read(), mtval::read());
     loop {}
 }
 

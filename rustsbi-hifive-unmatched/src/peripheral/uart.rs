@@ -56,13 +56,12 @@ impl Write<u8> for Uart {
 
     #[inline]
     fn flush(&mut self) -> nb::Result<(), Infallible> {
-        Ok(()) // todo: 观察水标
-        // if unsafe { &*self.inner }.ip.read().txwm().bit_is_set() {
-        //     // FIFO count is below the receive watermark (1)
-        //     Ok(())
-        // } else {
-        //     Err(nb::Error::WouldBlock)
-        // }
+        if unsafe { &*self.inner }.ip.read().txwm().bit_is_set() {
+            // FIFO count is below the receive watermark (1)
+            Ok(())
+        } else {
+            Err(nb::Error::WouldBlock)
+        }
     }
 }
 
@@ -80,7 +79,7 @@ impl fmt::Write for Uart {
         for byte in s.as_bytes() {
             nb::block!(uart.write(*byte)).ok(); // todo: 为了极致性能，未来添加水标设置
         }
-        // nb::block!(uart.flush()).ok(); // todo: 这行会影响输出
+        nb::block!(uart.flush()).ok(); // todo: 这行会影响输出
         Ok(())
     }
 }
@@ -89,18 +88,4 @@ impl fmt::Write for Uart {
 pub fn _print(args: fmt::Arguments) {
     use fmt::Write;
     unsafe { STDOUT.unwrap() }.write_fmt(args).unwrap();
-}
-
-#[macro_export(local_inner_macros)]
-macro_rules! eprint {
-    ($($arg:tt)*) => ({
-        $crate::peripheral::uart::_print(core::format_args!($($arg)*));
-    });
-}
-
-#[macro_export(local_inner_macros)]
-macro_rules! eprintln {
-    ($fmt: literal $(, $($arg: tt)+)?) => {
-        $crate::peripheral::uart::_print(core::format_args!(core::concat!($fmt, "\r\n") $(, $($arg)+)?));
-    }
 }
