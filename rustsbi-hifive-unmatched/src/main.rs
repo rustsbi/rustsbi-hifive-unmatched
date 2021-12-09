@@ -49,9 +49,9 @@ fn rust_main(hart_id: usize, opaque: usize) {
             }
         }
     } else { // 不是初始化核，先暂停
+        delegate_interrupt_exception(); // 第0个核不能委托中断（@sequencer）
         pause(clint);
     }
-    delegate_interrupt_exception();
     runtime::init();
     execute::execute_supervisor(0x80200000, hart_id, opaque);
 }
