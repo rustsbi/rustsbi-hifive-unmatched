@@ -56,12 +56,13 @@ impl Write<u8> for Uart {
 
     #[inline]
     fn flush(&mut self) -> nb::Result<(), Infallible> {
-        if unsafe { &*self.inner }.ip.read().txwm().bit_is_set() {
-            // FIFO count is below the receive watermark (1)
-            Ok(())
-        } else {
-            Err(nb::Error::WouldBlock)
-        }
+        Ok(()) // todo: 观察水标
+        // if unsafe { &*self.inner }.ip.read().txwm().bit_is_set() {
+        //     // FIFO count is below the receive watermark (1)
+        //     Ok(())
+        // } else {
+        //     Err(nb::Error::WouldBlock)
+        // }
     }
 }
 
