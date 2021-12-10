@@ -14,8 +14,8 @@ mod execute;
 mod hart_csr_utils;
 mod console;
 mod util;
-// #[allow(unused)] // use this in the future
-// mod device_tree;
+#[allow(unused)] // use this in the future
+mod device_tree;
 
 use core::panic::PanicInfo;
 use console::println;
@@ -44,6 +44,7 @@ fn rust_main(hart_id: usize, opaque: usize) {
             env!("CARGO_PKG_VERSION")
         );
         hart_csr_utils::print_hart0_csrs();
+        unsafe { device_tree::parse_device_tree(opaque) };
         println!("[rustsbi] enter supervisor 0x80200000, opaque register {:#x}", opaque);
         for target_hart_id in 0..=4 {
             if target_hart_id != 0 {

@@ -212,16 +212,21 @@ pub struct ChosenDevice {
 
 pub unsafe fn parse_device_tree(dtb_pa: usize) -> Result<ChosenDevice, Error> {
     let tree = DeviceTree::try_read(dtb_pa as *const u8)?;
+    use crate::console::println;
     for tag in tree.tags() {
         match tag? {
             Tag::Begin(name) => {
-                
+                println!("Begin {}", core::str::from_utf8_unchecked(name));
             },
             Tag::Prop(val, name) => {
+                println!("Prop {}, {}", 
+                core::str::from_utf8_unchecked(name),
+                core::str::from_utf8_unchecked(val)
+            );
                 
             },
             Tag::End => {
-                
+                println!("End");
             },
         }
     }

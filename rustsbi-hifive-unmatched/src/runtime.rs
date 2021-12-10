@@ -61,7 +61,7 @@ impl Generator for Runtime {
             Trap::Interrupt(Interrupt::MachineTimer) => MachineTrap::MachineTimer(),
             Trap::Interrupt(Interrupt::MachineSoft) => MachineTrap::MachineSoft(),
             e => panic!(
-                "unhandled exception: {:?}! mtval: {:#x?}, ctx: {:#x?}",
+                "unhandled exception: {:?}! mtval: {:x?}, ctx: {:x?}",
                 e, mtval, self.context
             ),
         };

@@ -1,0 +1,36 @@
+/dts-v1/;
+
+/ {
+    description = "RustSBI Test Image";
+    #address-cells = <1>;
+
+    images {
+        rustsbi {
+            data = /incbin/("target/riscv64imac-unknown-none-elf/release/rustsbi-hifive-unmatched.bin");
+			description = "RustSBI Firmware";
+			type = "firmware";
+			os = "rustsbi";
+			arch = "riscv";
+			compression = "none";
+			load = <0x80000000>;
+			entry = <0x80000000>;
+        };
+        fdt-1 {
+			description = "hifive-unmatched-a00";
+			type = "flat_dt";
+			compression = "none";
+			data = /incbin/("hifive-unmatched-a00.dtb");
+        };
+    };
+
+    configurations {
+		default = "unmatched-sdcard";
+
+		unmatched-sdcard {
+			description = "hifive-unmatched-a00";
+			firmware = "rustsbi";
+			//loadables = "uboot";
+			fdt = "fdt-1";
+		};
+    };
+};

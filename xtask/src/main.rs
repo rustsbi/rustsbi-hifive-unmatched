@@ -1,4 +1,5 @@
 use std::{env, path::{Path, PathBuf}, process::{self, Command}};
+use std::fmt;
 
 use clap::{clap_app, crate_authors, crate_description, crate_version};
 
@@ -11,6 +12,15 @@ struct XtaskEnv {
 enum CompileMode {
     Debug,
     Release
+}
+
+impl fmt::Display for CompileMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            CompileMode::Debug => write!(f, "debug"),
+            CompileMode::Release => write!(f, "release"),
+        }
+    }
 }
 
 const DEFAULT_TARGET: &'static str = "riscv64imac-unknown-none-elf";
@@ -133,13 +143,13 @@ fn xtask_unmatched_gdb(xtask_env: &XtaskEnv) {
     }
 }
 
-fn xtask_sd_image(_xtask_env: &XtaskEnv) {
+fn xtask_sd_image(xtask_env: &XtaskEnv) {
     // todo: mkimage tool path
     let status = Command::new("wsl")
         .current_dir(project_root())
         .arg("mkimage")
         .arg("-f")
-        .arg("sd-image.its")
+        .arg(&format!("sd-image-{}.its", xtask_env.compile_mode))
         .arg("target/sd-card-partition-2.img")
         .status()
         .expect("create sd card image");
