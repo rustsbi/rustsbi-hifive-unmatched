@@ -14,7 +14,6 @@ mod execute;
 mod hart_csr_utils;
 mod console;
 mod util;
-#[allow(unused)] // use this in the future
 mod device_tree;
 
 use core::panic::PanicInfo;
@@ -35,8 +34,8 @@ fn rust_main(hart_id: usize, opaque: usize) {
         init_stdout(uart);
         early_trap::init(hart_id);
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
-        init_stdio(uart);
-        init_clint(clint);
+        init_rustsbi_stdio(uart);
+        init_rustsbi_clint(clint);
         println!("[rustsbi] RustSBI version {}", rustsbi::VERSION);
         println!("{}", rustsbi::LOGO);
         println!(
@@ -44,7 +43,8 @@ fn rust_main(hart_id: usize, opaque: usize) {
             env!("CARGO_PKG_VERSION")
         );
         hart_csr_utils::print_hart0_csrs();
-        unsafe { device_tree::parse_device_tree(opaque) };
+        unsafe { device_tree::parse_device_tree(opaque) }
+            .expect("choose rustsbi devices");
         println!("[rustsbi] enter supervisor 0x80200000, opaque register {:#x}", opaque);
         for target_hart_id in 0..=4 {
             if target_hart_id != 0 {
@@ -81,12 +81,12 @@ fn init_bss() {
     } 
 }
 
-fn init_stdio(uart: peripheral::Uart) {
+fn init_rustsbi_stdio(uart: peripheral::Uart) {
     use rustsbi::legacy_stdio::init_legacy_stdio_embedded_hal;
     init_legacy_stdio_embedded_hal(uart);
 }
 
-fn init_clint(clint: peripheral::Clint) {
+fn init_rustsbi_clint(clint: peripheral::Clint) {
     rustsbi::init_ipi(clint);
     rustsbi::init_timer(clint);
 }
