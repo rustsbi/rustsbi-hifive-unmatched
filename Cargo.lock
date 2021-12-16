@@ -278,6 +278,7 @@ dependencies = [
  "r0",
  "riscv",
  "rustsbi",
+ "serde",
  "serde-device-tree",
  "serde_derive",
 ]
