@@ -30,6 +30,8 @@ fn rust_main(hart_id: usize, opaque: usize) {
     let clint = peripheral::Clint::new(0x2000000 as *mut u8);
     if hart_id == 0 {
         init_bss();
+        let uart = unsafe { peripheral::Uart::preloaded_uart0() };
+        init_stdout(uart);
         for target_hart_id in 0..=4 {
             if target_hart_id != 0 {
                 clint.send_soft(target_hart_id);
@@ -38,12 +40,10 @@ fn rust_main(hart_id: usize, opaque: usize) {
     } else {
         pause(clint);
     }
+    early_trap::init(hart_id);
     if hart_id == 0 {
-        let uart = unsafe { peripheral::Uart::preloaded_uart0() };
-        init_stdout(uart);
-        println!("opaque register is {:#x}", opaque);
-        early_trap::init(hart_id);
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
+        let uart = unsafe { peripheral::Uart::preloaded_uart0() };
         init_rustsbi_stdio(uart);
         init_rustsbi_clint(clint);
         println!("[rustsbi] RustSBI version {}", rustsbi::VERSION);
@@ -59,7 +59,6 @@ fn rust_main(hart_id: usize, opaque: usize) {
             }
         }
     } else { // 不是初始化核，先暂停
-        delegate_interrupt_exception(); // 第0个核不能委托中断（@dram）
         pause(clint);
         if hart_id == 1 {
             hart_csr_utils::print_hartn_csrs();
@@ -67,6 +66,7 @@ fn rust_main(hart_id: usize, opaque: usize) {
                 .expect("choose rustsbi devices");
             println!("[rustsbi] enter supervisor 0x80200000, opaque register {:#x}", opaque);
         }
+        delegate_interrupt_exception(); // 第0个核不能委托中断（@dram）
     }
     runtime::init();
     if hart_id == 1 { // todo
