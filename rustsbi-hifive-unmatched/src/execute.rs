@@ -1,11 +1,11 @@
-use crate::runtime::{MachineTrap, Runtime, SupervisorContext};
 use crate::feature;
+use crate::runtime::{MachineTrap, Runtime, SupervisorContext};
 use core::{
     ops::{Generator, GeneratorState},
     pin::Pin,
 };
+use riscv::register::scause::{Exception, Trap};
 use riscv::register::{mie, mip};
-use riscv::register::scause::{Trap, Exception};
 
 pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize) {
     let mut rt = Runtime::new_sbi_supervisor(supervisor_mepc, hart_id, opaque);

@@ -1,6 +1,6 @@
+use crate::peripheral::Uart;
 use crate::util::AmoMutex;
 use core::fmt;
-use crate::peripheral::Uart;
 use embedded_hal::serial::Write;
 
 static STDOUT: AmoMutex<Option<Uart>> = AmoMutex::new(None);
@@ -59,4 +59,4 @@ macro_rules! eprintln {
     }
 }
 
-pub(crate) use {print, println, eprintln};
+pub(crate) use {eprintln, print, println};

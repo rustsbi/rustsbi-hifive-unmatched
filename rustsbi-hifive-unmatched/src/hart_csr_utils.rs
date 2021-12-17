@@ -1,5 +1,6 @@
-use crate::console::{print, println};
+use crate::console::println;
 use alloc::format;
+use alloc::string::String;
 use alloc::vec::Vec;
 use bit_field::BitField;
 use riscv::register::{
@@ -29,13 +30,14 @@ fn print_misa() {
             MXL::XLEN64 => "RV64",
             MXL::XLEN128 => "RV128",
         };
-        print!("[rustsbi] misa: {}", mxl_str);
+        let mut misa_string = String::new();
+        misa_string.push_str(mxl_str);
         for ext in 'A'..='Z' {
             if isa.has_extension(ext) {
-                print!("{}", ext);
+                misa_string.push(ext);
             }
         }
-        println!("");
+        println!("[rustsbi] misa: {}", misa_string);
     }
 }
 

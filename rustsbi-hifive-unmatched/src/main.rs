@@ -10,14 +10,14 @@ extern crate alloc;
 mod console;
 mod device_tree;
 mod early_trap;
-mod feature;
 mod execute;
+mod feature;
 mod hart_csr_utils;
 mod peripheral;
 mod runtime;
 mod util;
 
-use console::{println, eprintln};
+use console::{eprintln, println};
 use core::panic::PanicInfo;
 
 #[panic_handler]
@@ -43,7 +43,8 @@ fn rust_main(hart_id: usize, opaque: usize) {
     } else {
         pause(clint);
     }
-    let opaque = if opaque == 0 { // 如果上一级没有填写设备树文件，这一级填写
+    let opaque = if opaque == 0 {
+        // 如果上一级没有填写设备树文件，这一级填写
         DEVICE_TREE.as_ptr() as usize
     } else {
         opaque
