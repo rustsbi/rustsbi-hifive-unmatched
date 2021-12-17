@@ -7,7 +7,7 @@
     images {
         rustsbi {
             data = /incbin/("target/riscv64imac-unknown-none-elf/release/rustsbi-hifive-unmatched.bin");
-			description = "RustSBI Firmware";
+			description = "RustSBI Firmware (Release)";
 			type = "firmware";
 			os = "rustsbi";
 			arch = "riscv";
