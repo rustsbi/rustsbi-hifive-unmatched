@@ -34,25 +34,28 @@ pub fn _print(args: fmt::Arguments) {
 #[doc(hidden)]
 pub fn _eprint(args: fmt::Arguments) {
     use fmt::Write;
-    let mut uart = unsafe { Uart::preloaded_uart0() };
-    uart.write_fmt(args).unwrap();
+    let lock = STDOUT.lock();
+    if let Some(mut stdout) = *lock {
+        stdout.write_fmt(args).unwrap();
+    }
+    drop(lock);
 }
 
 macro_rules! print {
     ($($arg:tt)*) => ({
-        $crate::console::_print(core::format_args!($($arg)*));
+        $crate::console::_print(core::format_args!($($arg)*))
     });
 }
 
 macro_rules! println {
     ($fmt: literal $(, $($arg: tt)+)?) => {
-        $crate::console::_print(core::format_args!(core::concat!($fmt, "\r\n") $(, $($arg)+)?));
+        $crate::console::_print(core::format_args!(core::concat!($fmt, "\r\n") $(, $($arg)+)?))
     }
 }
 
 macro_rules! eprintln {
     ($fmt: literal $(, $($arg: tt)+)?) => {
-        $crate::console::_eprint(core::format_args!(core::concat!($fmt, "\r\n") $(, $($arg)+)?));
+        $crate::console::_eprint(core::format_args!(core::concat!($fmt, "\r\n") $(, $($arg)+)?))
     }
 }
 

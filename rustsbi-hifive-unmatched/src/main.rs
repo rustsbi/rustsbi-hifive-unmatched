@@ -52,6 +52,13 @@ fn rust_main(hart_id: usize, opaque: usize) {
             "[rustsbi] Implementation: RustSBI-HiFive-Unleashed Version {}",
             env!("CARGO_PKG_VERSION")
         );
+        if let Err(e) = unsafe { device_tree::parse_device_tree(opaque) } {
+            println!("[rustsbi] warning: choose from device tree error, {}", e);
+        }
+        println!(
+            "[rustsbi] enter supervisor 0x80200000, opaque register {:#x}",
+            opaque
+        );
         hart_csr_utils::print_hart0_csrs();
         for target_hart_id in 0..=4 {
             if target_hart_id != 0 {
@@ -61,15 +68,10 @@ fn rust_main(hart_id: usize, opaque: usize) {
     } else {
         // 不是初始化核，先暂停
         pause(clint);
+        delegate_interrupt_exception(); // 第0个核不能委托中断（@dram）
         if hart_id == 1 {
             hart_csr_utils::print_hartn_csrs();
-            unsafe { device_tree::parse_device_tree(opaque) }.expect("choose rustsbi devices");
-            println!(
-                "[rustsbi] enter supervisor 0x80200000, opaque register {:#x}",
-                opaque
-            );
         }
-        delegate_interrupt_exception(); // 第0个核不能委托中断（@dram）
     }
     runtime::init();
     execute::execute_supervisor(0x80200000, hart_id, opaque);
