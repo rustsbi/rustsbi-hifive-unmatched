@@ -1,4 +1,4 @@
-use alloc::collections::BTreeMap;
+// use alloc::collections::BTreeMap;
 use serde_derive::Deserialize;
 use serde_device_tree::{self, error::Result};
 
@@ -6,6 +6,7 @@ use serde_device_tree::{self, error::Result};
 struct Tree<'a> {
     // #[serde(borrow)]
     // aliases: BTreeMap<&'a str, &'a str>,
+    #[serde(borrow)]
     chosen: Option<Chosen<'a>>,
 }
 
