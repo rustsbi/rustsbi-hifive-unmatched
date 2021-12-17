@@ -27,6 +27,8 @@ fn on_panic(info: &PanicInfo) -> ! {
     loop {}
 }
 
+static DEVICE_TREE: &'static [u8] = include_bytes!("hifive-unmatched-a00.dtb");
+
 fn rust_main(hart_id: usize, opaque: usize) {
     let clint = peripheral::Clint::new(0x2000000 as *mut u8);
     if hart_id == 0 {
@@ -41,6 +43,11 @@ fn rust_main(hart_id: usize, opaque: usize) {
     } else {
         pause(clint);
     }
+    let opaque = if opaque == 0 { // 如果上一级没有填写设备树文件，这一级填写
+        DEVICE_TREE.as_ptr() as usize
+    } else {
+        opaque
+    };
     early_trap::init(hart_id);
     if hart_id == 0 {
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架

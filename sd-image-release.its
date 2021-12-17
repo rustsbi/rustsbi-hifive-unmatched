@@ -19,7 +19,7 @@
 			description = "hifive-unmatched-a00";
 			type = "flat_dt";
 			compression = "none";
-			data = /incbin/("hifive-unmatched-a00.dtb");
+			data = /incbin/("rustsbi-hifive-unmatched/src/hifive-unmatched-a00.dtb");
         };
 		payload {
 			data = <0x0, 0x0, 0x0, 0x0>;
