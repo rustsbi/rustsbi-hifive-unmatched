@@ -21,6 +21,15 @@
 			compression = "none";
 			data = /incbin/("hifive-unmatched-a00.dtb");
         };
+		payload {
+			data = <0x0, 0x0, 0x0, 0x0>;
+			description = "U-Boot";
+			type = "standalone";
+			os = "U-Boot";
+			arch = "riscv";
+			compression = "none";
+			load = <0x80200000>;
+		};
     };
 
     configurations {
@@ -29,7 +38,7 @@
 		unmatched-sdcard {
 			description = "hifive-unmatched-a00";
 			firmware = "rustsbi";
-			//loadables = "uboot";
+			loadables = "payload";
 			fdt = "fdt-1";
 		};
     };

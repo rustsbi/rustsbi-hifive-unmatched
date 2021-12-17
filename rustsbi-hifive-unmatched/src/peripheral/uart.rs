@@ -1,6 +1,6 @@
-use fu740_hal::pac;
-use embedded_hal::serial::{Read, Write};
 use core::convert::Infallible;
+use embedded_hal::serial::{Read, Write};
+use fu740_hal::pac;
 
 // UART that is initialized by prior steps of bootloading
 #[derive(Clone, Copy)]
@@ -48,7 +48,9 @@ impl Write<u8> for Uart {
             Err(nb::Error::WouldBlock)
         } else {
             unsafe {
-                (&*self.inner).txdata.write_with_zero(|w| w.data().bits(byte));
+                (&*self.inner)
+                    .txdata
+                    .write_with_zero(|w| w.data().bits(byte));
             }
             Ok(())
         }
@@ -57,36 +59,11 @@ impl Write<u8> for Uart {
     #[inline]
     fn flush(&mut self) -> nb::Result<(), Infallible> {
         Ok(()) // todo: 观察水标
-        // if unsafe { &*self.inner }.ip.read().txwm().bit_is_set() {
-        //     // FIFO count is below the receive watermark (1)
-        //     Ok(())
-        // } else {
-        //     Err(nb::Error::WouldBlock)
-        // }
+               // if unsafe { &*self.inner }.ip.read().txwm().bit_is_set() {
+               //     // FIFO count is below the receive watermark (1)
+               //     Ok(())
+               // } else {
+               //     Err(nb::Error::WouldBlock)
+               // }
     }
-}
-
-use core::fmt;
-
-static mut STDOUT: Option<Uart> = None;
-
-pub fn init_stdout(uart: Uart) {
-    unsafe { STDOUT = Some(uart) };
-}
-
-impl fmt::Write for Uart {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        let mut uart = unsafe { STDOUT.unwrap() };
-        for byte in s.as_bytes() {
-            nb::block!(uart.write(*byte)).ok(); // todo: 为了极致性能，未来添加水标设置
-        }
-        nb::block!(uart.flush()).ok(); // todo: 这行会影响输出
-        Ok(())
-    }
-}
-
-#[doc(hidden)]
-pub fn _print(args: fmt::Arguments) {
-    use fmt::Write;
-    unsafe { STDOUT.unwrap() }.write_fmt(args).unwrap();
 }

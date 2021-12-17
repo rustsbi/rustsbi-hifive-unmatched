@@ -1,9 +1,8 @@
 use riscv::register::{
+    mcause, mscratch,
     mstatus::Mstatus,
+    mtval,
     mtvec::{self, TrapMode},
-    mscratch,
-    mcause,
-    mtval
 };
 
 #[inline]
@@ -19,7 +18,12 @@ pub fn init(hart_id: usize) {
 }
 
 extern "C" fn rust_fail(ctx: &SupervisorContext) -> ! {
-    crate::println!("rustsbi: early init stage fail, context: {:x?}, mcause: {:?}, mtval: {:x}", ctx, mcause::read(), mtval::read());
+    crate::console::eprintln!(
+        "rustsbi: early init stage fail, context: {:x?}, mcause: {:?}, mtval: {:x}",
+        ctx,
+        mcause::read().cause(),
+        mtval::read()
+    );
     loop {}
 }
 
@@ -56,15 +60,15 @@ pub struct SupervisorContext {
     pub t3: usize,
     pub t4: usize,
     pub t5: usize,
-    pub t6: usize,            // 30
-    pub mstatus: Mstatus,     // 31
-    pub mepc: usize,          // 32
+    pub t6: usize,        // 30
+    pub mstatus: Mstatus, // 31
+    pub mepc: usize,      // 32
 }
 
 #[naked]
 #[link_section = ".text"]
 pub unsafe extern "C" fn early_trap_fail() -> ! {
-    asm!( // sp:特权级栈,mscratch:特权级上下文
+    core::arch::asm!( // sp:特权级栈,mscratch:特权级上下文
         ".p2align 2",
         "csrrw  sp, mscratch, sp", // 新mscratch:特权级栈, 新sp:特权级上下文
         "addi   sp, sp, -33*8",

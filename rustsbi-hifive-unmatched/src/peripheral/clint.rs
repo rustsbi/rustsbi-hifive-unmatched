@@ -13,9 +13,7 @@ impl Clint {
     }
 
     pub fn get_mtime(&self) -> u64 {
-        unsafe {
-            core::ptr::read_volatile(self.base.offset(0xbff8) as *mut u64)
-        }
+        unsafe { core::ptr::read_volatile(self.base.offset(0xbff8) as *mut u64) }
     }
 
     pub fn set_timer(&self, hart_id: usize, instant: u64) {

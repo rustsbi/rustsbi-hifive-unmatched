@@ -25,7 +25,7 @@ impl<T> AmoMutex<T> {
     /// Locks the mutex and returns a guard that permits access to the inner data.
     pub fn lock(&self) -> AmoMutexGuard<T> {
         unsafe {
-            asm!(
+            core::arch::asm!(
                 "li     {one}, 1",
                 "1: lw  {tmp}, ({lock})", // check if lock is held
                 // "call   {relax}", // spin loop hint
@@ -44,6 +44,9 @@ impl<T> AmoMutex<T> {
             data: unsafe { &mut *self.data.get() },
         }
     }
+    // pub unsafe fn force_unlock(&self) {
+    //     *self.lock.get() = 0
+    // }
 }
 
 unsafe impl<T: ?Sized + Send> Sync for AmoMutex<T> {}
@@ -66,7 +69,7 @@ impl<'a, T: ?Sized> Drop for AmoMutexGuard<'a, T> {
     /// The dropping of the mutex guard will release the lock it was created from.
     fn drop(&mut self) {
         unsafe {
-            asm!(
+            core::arch::asm!(
                 "amoswap.w.rl x0, x0, ({lock})", // release lock by storing 0
                 lock = in(reg) self.lock,
             );

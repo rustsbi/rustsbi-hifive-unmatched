@@ -1,11 +1,11 @@
+use alloc::collections::BTreeMap;
 use serde_derive::Deserialize;
 use serde_device_tree::{self, error::Result};
-use alloc::collections::BTreeMap;
 
 #[derive(Debug, Deserialize)]
 struct Tree<'a> {
-    #[serde(borrow)]
-    aliases: BTreeMap<&'a str, &'a str>,
+    // #[serde(borrow)]
+    // aliases: BTreeMap<&'a str, &'a str>,
     chosen: Option<Chosen<'a>>,
 }
 
@@ -20,7 +20,7 @@ pub unsafe fn parse_device_tree(dtb_pa: usize) -> Result<()> {
     use crate::console::println;
     if let Some(chosen) = tree.chosen {
         if let Some(stdout_path) = chosen.stdout_path {
-            println!("stdout path: {}", stdout_path);
+            println!("[rustsbi] stdout path: {}", stdout_path);
         }
     }
     Ok(())

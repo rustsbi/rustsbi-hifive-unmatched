@@ -1,28 +1,28 @@
 #![no_std]
 #![no_main]
-#![feature(naked_functions, asm, asm_const, asm_sym)]
+#![feature(naked_functions, asm_const, asm_sym)]
 #![feature(generator_trait)]
 #![feature(default_alloc_error_handler)]
 #![feature(ptr_metadata)]
 
 extern crate alloc;
 
-mod runtime;
-mod peripheral;
+mod console;
+mod device_tree;
 mod early_trap;
 mod execute;
 mod hart_csr_utils;
-mod console;
+mod peripheral;
+mod runtime;
 mod util;
-mod device_tree;
 
+use console::{println, eprintln};
 use core::panic::PanicInfo;
-use console::println;
 
 #[panic_handler]
 fn on_panic(info: &PanicInfo) -> ! {
     let hart_id = riscv::register::mhartid::read();
-    println!("[rustsbi-panic] hart {} {}", hart_id, info); // [rustsbi-panic] hart 0 panicked at xxx
+    eprintln!("[rustsbi-panic] hart {} {}", hart_id, info); // [rustsbi-panic] hart 0 panicked at xxx
     loop {}
 }
 
@@ -31,7 +31,7 @@ fn rust_main(hart_id: usize, opaque: usize) {
     if hart_id == 0 {
         init_bss();
         let uart = unsafe { peripheral::Uart::preloaded_uart0() };
-        init_stdout(uart);
+        crate::console::init_stdout(uart);
         for target_hart_id in 0..=4 {
             if target_hart_id != 0 {
                 clint.send_soft(target_hart_id);
@@ -58,23 +58,21 @@ fn rust_main(hart_id: usize, opaque: usize) {
                 clint.send_soft(target_hart_id);
             }
         }
-    } else { // 不是初始化核，先暂停
+    } else {
+        // 不是初始化核，先暂停
         pause(clint);
         if hart_id == 1 {
             hart_csr_utils::print_hartn_csrs();
-            unsafe { device_tree::parse_device_tree(opaque) }
-                .expect("choose rustsbi devices");
-            println!("[rustsbi] enter supervisor 0x80200000, opaque register {:#x}", opaque);
+            unsafe { device_tree::parse_device_tree(opaque) }.expect("choose rustsbi devices");
+            println!(
+                "[rustsbi] enter supervisor 0x80200000, opaque register {:#x}",
+                opaque
+            );
         }
         delegate_interrupt_exception(); // 第0个核不能委托中断（@dram）
     }
     runtime::init();
-    if hart_id == 1 { // todo
-        execute::execute_supervisor(0x80200000, hart_id, opaque);
-    } else {
-        println!("hart {}!", hart_id);
-        loop {}
-    }
+    execute::execute_supervisor(0x80200000, hart_id, opaque);
 }
 
 fn init_bss() {
@@ -88,7 +86,7 @@ fn init_bss() {
     unsafe {
         r0::zero_bss(&mut sbss, &mut ebss);
         r0::init_data(&mut sdata, &mut edata, &sidata);
-    } 
+    }
 }
 
 fn init_rustsbi_stdio(uart: peripheral::Uart) {
@@ -153,13 +151,15 @@ static mut HEAP_SPACE: [u8; SBI_HEAP_SIZE] = [0; SBI_HEAP_SIZE];
 
 use buddy_system_allocator::LockedHeap;
 
-use crate::peripheral::uart::init_stdout;
 #[global_allocator]
 static HEAP_ALLOCATOR: LockedHeap<32> = LockedHeap::<32>::empty();
 
-#[inline] fn init_heap() {
+#[inline]
+fn init_heap() {
     unsafe {
-        HEAP_ALLOCATOR.lock().init(HEAP_SPACE.as_ptr() as usize, SBI_HEAP_SIZE);
+        HEAP_ALLOCATOR
+            .lock()
+            .init(HEAP_SPACE.as_ptr() as usize, SBI_HEAP_SIZE);
     }
 }
 
@@ -172,7 +172,7 @@ static mut SBI_STACK: [u8; SBI_STACK_SIZE] = [0; SBI_STACK_SIZE];
 #[link_section = ".text.entry"]
 #[export_name = "_start"]
 unsafe extern "C" fn entry() -> ! {
-    asm!(
+    core::arch::asm!(
     // 1. clear all registers
     "li x1, 0
     li x2, 0

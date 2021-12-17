@@ -1,11 +1,9 @@
-use crate::runtime::{MachineTrap, Runtime, SupervisorContext};
+use crate::runtime::{MachineTrap, Runtime}; //, SupervisorContext};
 use core::{
     ops::{Generator, GeneratorState},
     pin::Pin,
 };
-use riscv::register::{
-    mie, mip,
-};
+use riscv::register::{mie, mip};
 
 pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize) {
     let mut rt = Runtime::new_sbi_supervisor(supervisor_mepc, hart_id, opaque);
@@ -21,13 +19,13 @@ pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize)
             }
             GeneratorState::Yielded(MachineTrap::IllegalInstruction()) => {
                 todo!("emulate rdtime")
-            },
+            }
             GeneratorState::Yielded(MachineTrap::MachineTimer()) => unsafe {
                 mip::set_stimer();
                 mie::clear_mtimer();
             },
             GeneratorState::Yielded(MachineTrap::MachineSoft()) => todo!(),
-            GeneratorState::Complete(()) => break
+            GeneratorState::Complete(()) => break,
         }
     }
 }

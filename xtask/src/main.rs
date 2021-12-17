@@ -1,5 +1,9 @@
-use std::{env, path::{Path, PathBuf}, process::{self, Command}};
 use std::fmt;
+use std::{
+    env,
+    path::{Path, PathBuf},
+    process::{self, Command},
+};
 
 use clap::{clap_app, crate_authors, crate_description, crate_version};
 
@@ -11,7 +15,7 @@ struct XtaskEnv {
 #[derive(Debug)]
 enum CompileMode {
     Debug,
-    Release
+    Release,
 }
 
 impl fmt::Display for CompileMode {
@@ -45,7 +49,8 @@ fn main() {
         (@subcommand gdb =>
             (about: "Run GDB debugger")
         )
-    ).get_matches();
+    )
+    .get_matches();
     let mut xtask_env = XtaskEnv {
         compile_mode: CompileMode::Debug,
     };
@@ -84,13 +89,14 @@ fn xtask_build_sbi(xtask_env: &XtaskEnv) {
     command.current_dir(project_root().join("rustsbi-hifive-unmatched"));
     command.arg("build");
     match xtask_env.compile_mode {
-        CompileMode::Debug => {},
-        CompileMode::Release => { command.arg("--release"); },
+        CompileMode::Debug => {}
+        CompileMode::Release => {
+            command.arg("--release");
+        }
     }
     command.args(&["--package", "rustsbi-hifive-unmatched"]);
     command.args(&["--target", DEFAULT_TARGET]);
-    let status = command
-        .status().unwrap();
+    let status = command.status().unwrap();
     if !status.success() {
         println!("cargo build failed");
         process::exit(1);
@@ -105,7 +111,8 @@ fn xtask_binary_sbi(xtask_env: &XtaskEnv) {
         .arg("--binary-architecture=riscv64")
         .arg("--strip-all")
         .args(&["-O", "binary", "rustsbi-hifive-unmatched.bin"])
-        .status().unwrap();
+        .status()
+        .unwrap();
 
     if !status.success() {
         println!("objcopy binary failed");
@@ -130,10 +137,11 @@ fn xtask_unmatched_gdb(xtask_env: &XtaskEnv) {
     command.args(&["--eval-command", "file rustsbi-hifive-unmatched"]);
     command.args(&["--eval-command", "target extended-remote localhost:3333"]);
     command.arg("--quiet");
-        
+
     ctrlc::set_handler(move || {
         // when ctrl-c, don't exit gdb
-    }).expect("disable Ctrl-C exit");
+    })
+    .expect("disable Ctrl-C exit");
 
     let status = command.status().expect("run program");
 
