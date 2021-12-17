@@ -41,22 +41,26 @@ pub fn _eprint(args: fmt::Arguments) {
     drop(lock);
 }
 
+#[allow(unused)]
 macro_rules! print {
     ($($arg:tt)*) => ({
         $crate::console::_print(core::format_args!($($arg)*))
     });
 }
 
+#[allow(unused)]
 macro_rules! println {
     ($fmt: literal $(, $($arg: tt)+)?) => {
         $crate::console::_print(core::format_args!(core::concat!($fmt, "\r\n") $(, $($arg)+)?))
     }
 }
 
+#[allow(unused)]
 macro_rules! eprintln {
     ($fmt: literal $(, $($arg: tt)+)?) => {
         $crate::console::_eprint(core::format_args!(core::concat!($fmt, "\r\n") $(, $($arg)+)?))
     }
 }
 
+#[allow(unused)]
 pub(crate) use {eprintln, print, println};
