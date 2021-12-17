@@ -10,6 +10,7 @@ extern crate alloc;
 mod console;
 mod device_tree;
 mod early_trap;
+mod feature;
 mod execute;
 mod hart_csr_utils;
 mod peripheral;
@@ -67,11 +68,11 @@ fn rust_main(hart_id: usize, opaque: usize) {
         }
     } else {
         // 不是初始化核，先暂停
-        pause(clint);
         delegate_interrupt_exception(); // 第0个核不能委托中断（@dram）
         if hart_id == 1 {
             hart_csr_utils::print_hartn_csrs();
         }
+        pause(clint);
     }
     runtime::init();
     execute::execute_supervisor(0x80200000, hart_id, opaque);
