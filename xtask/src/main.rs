@@ -159,10 +159,8 @@ fn xtask_unmatched_gdb(xtask_env: &XtaskEnv) {
 }
 
 fn xtask_sd_image(xtask_env: &XtaskEnv) {
-    // todo: mkimage tool path
-    let status = Command::new("wsl")
+    let status = find_mkimage().expect("find mkimage tool")
         .current_dir(project_root())
-        .arg("mkimage")
         .arg("-f")
         .arg(&format!("sd-image-{}.its", xtask_env.compile_mode))
         .arg("target/sd-card-partition-2.img")
@@ -213,10 +211,8 @@ fn xtask_binary_test_kernel(xtask_env: &XtaskEnv) {
 }
 
 fn xtask_sd_image_test_kernel(xtask_env: &XtaskEnv) {
-    // todo: mkimage tool path
-    let status = Command::new("wsl")
+    let status = find_mkimage().expect("find mkimage tool")
         .current_dir(project_root())
-        .arg("mkimage")
         .arg("-f")
         .arg(&format!("test-kernel/sd-image-{}.its", xtask_env.compile_mode))
         .arg("target/rustsbi-with-test-kernel.img")
@@ -244,4 +240,26 @@ fn project_root() -> PathBuf {
         .nth(1)
         .unwrap()
         .to_path_buf()
+}
+
+fn find_mkimage() -> std::io::Result<Command> {
+    let mkimage = Command::new("mkimage")
+        .arg("-V")
+        .status();
+    if mkimage.is_ok() {
+        return Ok(Command::new("mkimage"))
+    }
+    #[cfg(windows)]
+    {
+        let wsl_mkimage = Command::new("wsl")
+            .arg("mkimage")
+            .arg("-V")
+            .status();
+        if wsl_mkimage.is_ok() {
+            let mut cmd = Command::new("wsl");
+            cmd.arg("mkimage");
+            return Ok(cmd)
+        }
+    }
+    return Err(mkimage.unwrap_err())
 }
