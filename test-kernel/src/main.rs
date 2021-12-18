@@ -157,7 +157,7 @@ fn panic(info: &PanicInfo) -> ! {
     loop {}
 }
 
-const BOOT_STACK_SIZE: usize = 4096 * 4 * 8;
+const BOOT_STACK_SIZE: usize = 0x10000 * 5;
 
 static mut BOOT_STACK: [u8; BOOT_STACK_SIZE] = [0; BOOT_STACK_SIZE];
 

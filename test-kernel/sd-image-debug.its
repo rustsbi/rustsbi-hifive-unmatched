@@ -21,6 +21,15 @@
 			compression = "none";
 			data = /incbin/("../rustsbi-hifive-unmatched/src/hifive-unmatched-a00.dtb");
         };
+		test-kernel {
+			description = "RustSBI Unit Test Kernel";
+			type = "kernel";
+			arch = "riscv";
+			compression = "none";
+			load = <0x80200000>;
+			entry = <0x80200000>;
+			data = /incbin/("../target/riscv64imac-unknown-none-elf/debug/test-kernel.bin");
+		};
 	};
 
     configurations {
