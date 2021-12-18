@@ -25,6 +25,10 @@ sudo dd if=target/sd-card-partition-2.img of=\\?\Device\Harddisk????\Partition2 
 
 烧录完成后，就可以使用RustSBI引导启动了。
 
+## 文档
+
+请参考[项目Wiki](https://github.com/rustsbi/rustsbi-hifive-unmatched/wiki)来获取完整的文档。
+
 ## 对大小核设计的支持方案
 
 HiFive Unmatched主板板载SiFive Freedom U740处理器。FU740是异构的多核处理器，它总共有五个核。
