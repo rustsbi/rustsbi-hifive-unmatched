@@ -44,6 +44,7 @@ fn main() {
         )
         (@subcommand image =>
             (about: "Build SD card partition image")
+            (@arg PAYLOAD: "Set the build payload, may be 'test-kernel'")
             (@arg release: --release "Build artifacts in release mode, with optimizations")
         )
         (@subcommand gdb =>
@@ -73,7 +74,13 @@ fn main() {
         }
         xtask_build_sbi(&xtask_env);
         xtask_binary_sbi(&xtask_env);
-        xtask_sd_image(&xtask_env);
+        if matches.value_of("PAYLOAD") == Some("test-kernel") {
+            xtask_build_test_kernel(&xtask_env);
+            xtask_binary_test_kernel(&xtask_env);
+            xtask_sd_image_test_kernel(&xtask_env);
+        } else {
+            xtask_sd_image(&xtask_env);
+        }
     } else if let Some(_matches) = matches.subcommand_matches("gdb") {
         xtask_build_sbi(&xtask_env);
         xtask_binary_sbi(&xtask_env);
@@ -159,6 +166,60 @@ fn xtask_sd_image(xtask_env: &XtaskEnv) {
         .arg("-f")
         .arg(&format!("sd-image-{}.its", xtask_env.compile_mode))
         .arg("target/sd-card-partition-2.img")
+        .status()
+        .expect("create sd card image");
+
+    if !status.success() {
+        println!("mkimage failed with status {}", status);
+        process::exit(status.code().unwrap_or(1));
+    }
+}
+
+fn xtask_build_test_kernel(xtask_env: &XtaskEnv) {
+    let cargo = env::var("CARGO").unwrap_or_else(|_| "cargo".to_string());
+    let mut command = Command::new(cargo);
+    command.current_dir(project_root().join("test-kernel"));
+    command.arg("build");
+    match xtask_env.compile_mode {
+        CompileMode::Debug => {}
+        CompileMode::Release => {
+            command.arg("--release");
+        }
+    }
+    command.args(&["--package", "test-kernel"]);
+    command.args(&["--target", DEFAULT_TARGET]);
+    let status = command.status().unwrap();
+    if !status.success() {
+        println!("cargo build failed");
+        process::exit(1);
+    }
+}
+
+fn xtask_binary_test_kernel(xtask_env: &XtaskEnv) {
+    let objcopy = "rust-objcopy";
+    let status = Command::new(objcopy)
+        .current_dir(dist_dir(xtask_env))
+        .arg("test-kernel")
+        .arg("--binary-architecture=riscv64")
+        .arg("--strip-all")
+        .args(&["-O", "binary", "test-kernel.bin"])
+        .status()
+        .unwrap();
+
+    if !status.success() {
+        println!("objcopy binary failed");
+        process::exit(1);
+    }
+}
+
+fn xtask_sd_image_test_kernel(xtask_env: &XtaskEnv) {
+    // todo: mkimage tool path
+    let status = Command::new("wsl")
+        .current_dir(project_root())
+        .arg("mkimage")
+        .arg("-f")
+        .arg(&format!("test-kernel/sd-image-{}.its", xtask_env.compile_mode))
+        .arg("target/rustsbi-with-test-kernel.img")
         .status()
         .expect("create sd card image");
 
