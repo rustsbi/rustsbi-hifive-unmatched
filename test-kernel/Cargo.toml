@@ -1,0 +1,10 @@
+[package]
+name = "test-kernel"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+buddy_system_allocator = "0.8"
+riscv = "0.7"

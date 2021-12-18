@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "rustsbi-hifive-unmatched",
+    "test-kernel",
     "xtask"
 ]
 default-members = ["xtask"]
