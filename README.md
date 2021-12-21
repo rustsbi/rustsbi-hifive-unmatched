@@ -25,6 +25,10 @@ sudo dd if=target/sd-card-partition-2.img of=\\?\Device\Harddisk????\Partition2 
 
 烧录完成后，就可以使用RustSBI引导启动了。
 
+## Rust版本
+
+编译这个项目至少需要`rustc 1.59.0-nightly (c5ecc1570 2021-12-15)`的Rust版本。
+
 ## 文档
 
 请参考[项目Wiki](https://github.com/rustsbi/rustsbi-hifive-unmatched/wiki)来获取完整的文档。
