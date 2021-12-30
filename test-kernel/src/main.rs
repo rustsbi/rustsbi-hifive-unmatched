@@ -3,7 +3,6 @@
 #![no_std]
 #![no_main]
 
-
 mod console;
 mod mm;
 mod sbi;
@@ -75,7 +74,10 @@ pub extern "C" fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
 }
 
 extern "C" fn hart_2_resume(hart_id: usize, param: usize) {
-    println!("<< The parameter passed to hart {} resume is: {:#x}", hart_id, param);
+    println!(
+        "<< The parameter passed to hart {} resume is: {:#x}",
+        hart_id, param
+    );
     let param = 0x12345678;
     println!(">> Start hart 3 with parameter {:#x}", param);
     /* start_addr should be physical address, and here pa == va */
@@ -85,7 +87,10 @@ extern "C" fn hart_2_resume(hart_id: usize, param: usize) {
 }
 
 extern "C" fn hart_3_start(hart_id: usize, param: usize) {
-    println!("<< The parameter passed to hart {} start is: {:#x}", hart_id, param);
+    println!(
+        "<< The parameter passed to hart {} start is: {:#x}",
+        hart_id, param
+    );
     println!("<< Test-kernel: All hart SBI test SUCCESS, shutdown");
     sbi::shutdown()
 }

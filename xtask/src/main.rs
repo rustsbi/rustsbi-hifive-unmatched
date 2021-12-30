@@ -55,23 +55,25 @@ fn main() {
     let mut xtask_env = XtaskEnv {
         compile_mode: CompileMode::Debug,
     };
-    println!("xtask: mode: {:?}", xtask_env.compile_mode);
     if let Some(matches) = matches.subcommand_matches("make") {
         if matches.is_present("release") {
             xtask_env.compile_mode = CompileMode::Release;
         }
+        eprintln!("xtask make: mode: {:?}", xtask_env.compile_mode);
         xtask_build_sbi(&xtask_env);
         xtask_binary_sbi(&xtask_env);
     } else if let Some(matches) = matches.subcommand_matches("asm") {
         if matches.is_present("release") {
             xtask_env.compile_mode = CompileMode::Release;
         }
+        eprintln!("xtask asm: mode: {:?}", xtask_env.compile_mode);
         xtask_build_sbi(&xtask_env);
         xtask_asm_sbi(&xtask_env);
     } else if let Some(matches) = matches.subcommand_matches("image") {
         if matches.is_present("release") {
             xtask_env.compile_mode = CompileMode::Release;
         }
+        eprintln!("xtask image: mode: {:?}", xtask_env.compile_mode);
         xtask_build_sbi(&xtask_env);
         xtask_binary_sbi(&xtask_env);
         if matches.value_of("PAYLOAD") == Some("test-kernel") {
@@ -82,11 +84,12 @@ fn main() {
             xtask_sd_image(&xtask_env);
         }
     } else if let Some(_matches) = matches.subcommand_matches("gdb") {
+        eprintln!("xtask gdb: mode: {:?}", xtask_env.compile_mode);
         xtask_build_sbi(&xtask_env);
         xtask_binary_sbi(&xtask_env);
         xtask_unmatched_gdb(&xtask_env);
     } else {
-        println!("Use `cargo make` to build, `cargo xtask --help` for help")
+        eprintln!("Use `cargo make` to build, `cargo xtask --help` for help")
     }
 }
 
@@ -105,7 +108,7 @@ fn xtask_build_sbi(xtask_env: &XtaskEnv) {
     command.args(&["--target", DEFAULT_TARGET]);
     let status = command.status().unwrap();
     if !status.success() {
-        println!("cargo build failed");
+        eprintln!("cargo build failed");
         process::exit(1);
     }
 }
@@ -122,7 +125,7 @@ fn xtask_binary_sbi(xtask_env: &XtaskEnv) {
         .unwrap();
 
     if !status.success() {
-        println!("objcopy binary failed");
+        eprintln!("objcopy binary failed");
         process::exit(1);
     }
 }
@@ -153,13 +156,14 @@ fn xtask_unmatched_gdb(xtask_env: &XtaskEnv) {
     let status = command.status().expect("run program");
 
     if !status.success() {
-        println!("gdb failed with status {}", status);
+        eprintln!("gdb failed with status {}", status);
         process::exit(status.code().unwrap_or(1));
     }
 }
 
 fn xtask_sd_image(xtask_env: &XtaskEnv) {
-    let status = find_mkimage().expect("find mkimage tool")
+    let status = find_mkimage()
+        .expect("find mkimage tool")
         .current_dir(project_root())
         .arg("-f")
         .arg(&format!("sd-image-{}.its", xtask_env.compile_mode))
@@ -168,7 +172,7 @@ fn xtask_sd_image(xtask_env: &XtaskEnv) {
         .expect("create sd card image");
 
     if !status.success() {
-        println!("mkimage failed with status {}", status);
+        eprintln!("mkimage failed with status {}", status);
         process::exit(status.code().unwrap_or(1));
     }
 }
@@ -188,7 +192,7 @@ fn xtask_build_test_kernel(xtask_env: &XtaskEnv) {
     command.args(&["--target", DEFAULT_TARGET]);
     let status = command.status().unwrap();
     if !status.success() {
-        println!("cargo build failed");
+        eprintln!("cargo build failed");
         process::exit(1);
     }
 }
@@ -205,22 +209,26 @@ fn xtask_binary_test_kernel(xtask_env: &XtaskEnv) {
         .unwrap();
 
     if !status.success() {
-        println!("objcopy binary failed");
+        eprintln!("objcopy binary failed");
         process::exit(1);
     }
 }
 
 fn xtask_sd_image_test_kernel(xtask_env: &XtaskEnv) {
-    let status = find_mkimage().expect("find mkimage tool")
+    let status = find_mkimage()
+        .expect("find mkimage tool")
         .current_dir(project_root())
         .arg("-f")
-        .arg(&format!("test-kernel/sd-image-{}.its", xtask_env.compile_mode))
+        .arg(&format!(
+            "test-kernel/sd-image-{}.its",
+            xtask_env.compile_mode
+        ))
         .arg("target/rustsbi-with-test-kernel.img")
         .status()
         .expect("create sd card image");
 
     if !status.success() {
-        println!("mkimage failed with status {}", status);
+        eprintln!("mkimage failed with status {}", status);
         process::exit(status.code().unwrap_or(1));
     }
 }
@@ -243,23 +251,18 @@ fn project_root() -> PathBuf {
 }
 
 fn find_mkimage() -> std::io::Result<Command> {
-    let mkimage = Command::new("mkimage")
-        .arg("-V")
-        .status();
+    let mkimage = Command::new("mkimage").arg("-V").status();
     if mkimage.is_ok() {
-        return Ok(Command::new("mkimage"))
+        return Ok(Command::new("mkimage"));
     }
     #[cfg(windows)]
     {
-        let wsl_mkimage = Command::new("wsl")
-            .arg("mkimage")
-            .arg("-V")
-            .status();
+        let wsl_mkimage = Command::new("wsl").arg("mkimage").arg("-V").status();
         if wsl_mkimage.is_ok() {
             let mut cmd = Command::new("wsl");
             cmd.arg("mkimage");
-            return Ok(cmd)
+            return Ok(cmd);
         }
     }
-    return Err(mkimage.unwrap_err())
+    return Err(mkimage.unwrap_err());
 }
